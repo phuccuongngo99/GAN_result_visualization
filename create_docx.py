@@ -20,7 +20,7 @@ master_path = args.master_path
 doc_path = args.doc
 
 #Add each row of information of one model
-def add_row(config_dict, result_dict,table, count):
+def add_row(config_dict, result_dict, table, count, folder_path):
     count_dict = {'Model':str(count)}
     combine_dict = {**count_dict,**config_dict, **result_dict}
     
@@ -31,7 +31,7 @@ def add_row(config_dict, result_dict,table, count):
         else:
             cell_img = cells[count].paragraphs[0]
             run = cell_img.add_run()
-            run.add_picture(combine_dict[key], width=Inches(1.0))
+            run.add_picture(os.path.join(folder_path,combine_dict[key]), width=Inches(1.0))
 
 
 def tabulate(master_path):
@@ -60,7 +60,7 @@ def tabulate(master_path):
         folder_path = os.path.join(master_path, folder)
         config_dict = json.loads(open(os.path.join(folder_path,'config.json'),'r').read())
         result_dict = json.loads(open(os.path.join(folder_path,'result.json'),'r').read())
-        add_row(config_dict,result_dict,table,count)
+        add_row(config_dict,result_dict,table,count,folder_path)
     document.save(doc_path)
 
 tabulate(master_path)

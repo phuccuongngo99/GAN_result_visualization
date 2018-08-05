@@ -12,13 +12,13 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-c','--conf', help='your config.json hyperparameter file')
-parser.add_argument('-p','--py', help='your python file to by run')
+parser.add_argument('-p','--py', help='your python scripts folder to run')
 parser.add_argument('-m','--master_path', help='the master folder to store different models')
 
 args = parser.parse_args()
 
 json_file = args.conf
-py_file = args.py
+py_folder = args.py
 master_path = args.master_path
 
 #Make master_folder
@@ -39,7 +39,7 @@ def permutation(config_list,para_name,para_list):
 
 #Create different folders for different hyperparameters configurations
 #Each folder will have config.json and yourfile.py
-def create_folder(master_path,config_dict,py_file,count):
+def create_folder(master_path,config_dict,py_folder,count):
     folder_name = 'Model_' + str(count) + '_'
     for para in config_dict:
         folder_name += para+'_'+str(config_dict[para])+'_'
@@ -49,11 +49,12 @@ def create_folder(master_path,config_dict,py_file,count):
         os.makedirs(folder_path)
     with open(os.path.join(folder_path,'config.json'),'w') as outfile:
         json.dump(config_dict, outfile, indent=4)
-        
-    shutil.copy(py_file,folder_path)   
+    
+    for py_file in os.listdir(py_folder):
+        shutil.copy(os.path.join(py_folder,py_file),folder_path)  
     
 #One main function
-def overall(json_file,py_file,master_path):
+def overall(json_file,py_folder,master_path):
     config_list = [{}]
     file = open(json_file,'r')
     data = json.loads(file.read())
@@ -63,8 +64,8 @@ def overall(json_file,py_file,master_path):
     
     count = 0
     for config_dict in config_list:
-        create_folder(master_path,config_dict,py_file,count)
+        create_folder(master_path,config_dict,py_folder,count)
         count += 1
     return config_list
 
-overall_out = overall(json_file,py_file,master_path)
+overall_out = overall(json_file,py_folder,master_path)
