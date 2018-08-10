@@ -1,0 +1,7 @@
+{
+    "epoch": [50,100],
+    "batch_size": [1000],
+    "dispersion_weight": [1.5,2.0],
+    "loss_type": ["electric","com"],
+    "round_up": [0.5]
+}

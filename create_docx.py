@@ -8,8 +8,10 @@ Created on Fri Aug  3 17:42:09 2018
 import os
 import json
 import argparse
+import subprocess
 from docx import Document
 from docx.shared import Inches
+from collections import OrderedDict
 
 parser = argparse.ArgumentParser('Tabulate the result in a docx file')
 parser.add_argument('-m','--master_path',help='The folder that contains many model folders')
@@ -19,6 +21,21 @@ args = parser.parse_args()
 master_path = args.master_path
 doc_path = args.doc
 
+cwd = os.getcwd()
+def make_gif(folder_path):
+    cwd_folder = os.path.join(cwd,folder_path)
+    num_png = 0
+    for file in os.listdir(folder_path):
+        if file.endswith('.png'):
+            num_png+=1
+    input_frame = num_png//1 #20 seconds mah
+    subprocess.call(['ffmpeg', '-f', 'image2', '-framerate', str(input_frame), '-i', '%d.png', 'result.gif'], cwd=cwd_folder)
+    subprocess.call(['ffmpeg', '-f', 'image2', '-framerate', str(input_frame), '-i', '%d.png', 'result.mp4'], cwd=cwd_folder)
+    for file in os.listdir(folder_path):
+        if file.endswith('.png'):
+            os.remove(cwd_folder+'/'+file)
+
+
 #Add each row of information of one model
 def add_row(config_dict, result_dict, table, count, folder_path):
     count_dict = {'Model':str(count)}
@@ -26,13 +43,12 @@ def add_row(config_dict, result_dict, table, count, folder_path):
     
     cells = table.add_row().cells
     for count, key in enumerate(combine_dict):
-        if key != 'gif':
-            cells[count].text = str(combine_dict[key])
-        else:
+        if key == 'gif' or key == 'loss_graph':
             cell_img = cells[count].paragraphs[0]
             run = cell_img.add_run()
             run.add_picture(os.path.join(folder_path,combine_dict[key]), width=Inches(1.0))
-
+        else:
+            cells[count].text = str(combine_dict[key])            
 
 def tabulate(master_path):
     folder_1 = os.listdir(master_path)[0]
@@ -56,11 +72,13 @@ def tabulate(master_path):
         heading_cells[count].text = key
     
     for folder in os.listdir(master_path):
-        count = folder.split('_')[1]
-        folder_path = os.path.join(master_path, folder)
-        config_dict = json.loads(open(os.path.join(folder_path,'config.json'),'r').read())
-        result_dict = json.loads(open(os.path.join(folder_path,'result.json'),'r').read())
-        add_row(config_dict,result_dict,table,count,folder_path)
-    document.save(doc_path)
+        if folder.startswith('Model_'):
+            count = folder.split('_')[1]
+            folder_path = os.path.join(master_path, folder)
+            make_gif(folder_path)
+            config_dict = json.loads(open(os.path.join(folder_path,'config.json'),'r').read())
+            result_dict = json.loads(open(os.path.join(folder_path,'result.json'),'r').read())
+            add_row(config_dict,result_dict,table,count,folder_path)
+        document.save(doc_path)
 
 tabulate(master_path)
