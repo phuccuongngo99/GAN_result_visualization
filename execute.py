@@ -21,9 +21,10 @@ py_file = args.py
 #Execute in sequence yourfile.py in each folders under the master folder
 def excute(master_path,py_file):
     for folder in os.listdir(master_path):
-        folder_path = os.path.join(master_path,folder)
-        code = subprocess.call(['python', py_file, '-c', 'config.json'], cwd=folder_path)
-        if code != 0:
-            print("Have problems with this ",folder)
+    	if folder.startswith("Model_"):
+	        folder_path = os.path.join(master_path,folder)
+	        code = subprocess.call(['python', py_file, '-c', 'config.json'], cwd=folder_path)
+	        if code != 0:
+	            print("Have problems with this ",folder)
             
 excute(master_path,py_file)

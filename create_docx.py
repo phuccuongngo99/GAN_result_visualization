@@ -26,41 +26,44 @@ def add_row(config_dict, result_dict, table, count, folder_path):
     
     cells = table.add_row().cells
     for count, key in enumerate(combine_dict):
-        if key != 'gif':
-            cells[count].text = str(combine_dict[key])
-        else:
+        if key == 'gif' or key == 'loss_graph':
             cell_img = cells[count].paragraphs[0]
             run = cell_img.add_run()
             run.add_picture(os.path.join(folder_path,combine_dict[key]), width=Inches(1.0))
+        else:
+            cells[count].text = str(combine_dict[key])
 
 
 def tabulate(master_path):
-    folder_1 = os.listdir(master_path)[0]
-    folder_1_path = os.path.join(master_path,folder_1)    
-    count_dict = {'Model':''}
-    
-    config_dict = json.loads(open(os.path.join(folder_1_path,'config.json'),'r').read())
-    result_dict = json.loads(open(os.path.join(folder_1_path,'result.json'),'r').read())
-    
-    combine_dict = {**count_dict, **config_dict, **result_dict}
-    
-    
-    num_col = len(combine_dict)
-    document = Document()
-    
-    document.add_paragraph('Results')
-    #Create all the headings first
-    table = document.add_table(rows=1, cols=num_col)
-    heading_cells = table.rows[0].cells
+    for folder_1 in os.listdir(master_path):
+        if folder_1.startswith('Model_'):
+            folder_1_path = os.path.join(master_path,folder_1)    
+            count_dict = {'Model':''}
+            
+            config_dict = json.loads(open(os.path.join(folder_1_path,'config.json'),'r').read())
+            result_dict = json.loads(open(os.path.join(folder_1_path,'result.json'),'r').read())
+            
+            combine_dict = {**count_dict, **config_dict, **result_dict}
+            
+            num_col = len(combine_dict)
+            document = Document()
+            
+            document.add_paragraph('Results')
+            #Create all the headings first
+            table = document.add_table(rows=1, cols=num_col)
+            heading_cells = table.rows[0].cells
+            break
+
     for count, key in enumerate(combine_dict):
         heading_cells[count].text = key
     
     for folder in os.listdir(master_path):
-        count = folder.split('_')[1]
-        folder_path = os.path.join(master_path, folder)
-        config_dict = json.loads(open(os.path.join(folder_path,'config.json'),'r').read())
-        result_dict = json.loads(open(os.path.join(folder_path,'result.json'),'r').read())
-        add_row(config_dict,result_dict,table,count,folder_path)
-    document.save(doc_path)
+        if folder.startswith('Model_'):
+            count = folder.split('_')[1]
+            folder_path = os.path.join(master_path, folder)
+            config_dict = json.loads(open(os.path.join(folder_path,'config.json'),'r').read())
+            result_dict = json.loads(open(os.path.join(folder_path,'result.json'),'r').read())
+            add_row(config_dict,result_dict,table,count,folder_path)
+        document.save(doc_path)
 
 tabulate(master_path)
